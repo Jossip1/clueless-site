@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Deploy to GoDaddy
 
 on:
@@ -22,7 +23,3 @@ jobs:
           remote_path: ${{ secrets.SFTP_TARGET }}
           sftp_only: true
           delete_remote_files: false
-          exclude: |
-            .git*
-            .github/*
-            README.md
