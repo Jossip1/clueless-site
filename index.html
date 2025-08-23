@@ -209,5 +209,63 @@
       return false;
     }
   </script>
+  <script type="module">
+    // Firebase (CDN)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // 1) YOUR Firebase config (Project Settings → Your apps → Web)
+    const firebaseConfig = {
+      apiKey:        "YOUR_API_KEY",
+      authDomain:    "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId:     "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId:         "YOUR_APP_ID"
+    };
+
+    // Init
+    const app = initializeApp(firebaseConfig);
+    const db  = getFirestore(app);
+
+    // Helpers
+    const $ = (id) => document.getElementById(id);
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    $("waitlist").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = $("email").value.trim();
+      $("formError").classList.add("hidden");
+      $("formSuccess").classList.add("hidden");
+
+      if (!emailRe.test(email)) {
+        $("formError").textContent = "Please enter a valid email.";
+        $("formError").classList.remove("hidden");
+        return;
+      }
+
+      try {
+        // OPTION A: Top-level collection
+        const colRef = collection(db, "waitlist");
+
+        await addDoc(colRef, {
+          email,
+          createdAt: serverTimestamp(),
+          ua: navigator.userAgent || ""
+        });
+
+        $("email").value = "";
+        $("formSuccess").classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        $("formError").textContent = "Something went wrong. Please try again.";
+        $("formError").classList.remove("hidden");
+      }
+    });
+  </script>
+
+
+
 </body>
 </html>
