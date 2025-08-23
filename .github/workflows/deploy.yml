@@ -1,4 +1,3 @@
-# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 name: Deploy to GoDaddy
 
 on:
@@ -23,3 +22,6 @@ jobs:
           remote_path: ${{ secrets.SFTP_TARGET }}
           sftp_only: true
           delete_remote_files: false
+          # If you ever see "Host key verification failed", uncomment:
+          # ssh_cmd_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
