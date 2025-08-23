@@ -2,7 +2,7 @@ name: Deploy to GoDaddy
 
 on:
   push:
-    branches: [ "main" ]   # runs every time you push to main
+    branches: [ "main" ]  # runs every time you push to main
 
 jobs:
   deploy:
@@ -22,6 +22,3 @@ jobs:
           remote_path: ${{ secrets.SFTP_TARGET }}
           sftp_only: true
           delete_remote_files: false
-          # If you ever see "Host key verification failed", uncomment:
-          # ssh_cmd_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-
