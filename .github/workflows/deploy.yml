@@ -15,10 +15,13 @@ jobs:
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.SFTP_HOST }}
-          port: ${{ secrets.SFTP_PORT }}
+          # Hardcode the port for one run to rule out secret parsing trouble:
+          port: '22'
           username: ${{ secrets.SFTP_USER }}
           password: ${{ secrets.SFTP_PASS }}
           local_path: "./"
-          remote_path: ${{ secrets.SFTP_TARGET }}
+          remote_path: ${{ secrets.SFTP_TARGET }}  # should be /home/xjo051iz39gj/public_html
           sftp_only: true
           delete_remote_files: false
+          # leave ssh_cmd_args commented unless needed
+          # ssh_cmd_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
