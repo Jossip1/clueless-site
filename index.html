@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Clueless — Launching Soon</title>
   <meta name="description" content="Clueless — AI study companion with on-screen capture and step-by-step reasoning. Launching Fall 2025. Join the waitlist.">
-  <link rel="stylesheet" href="layout-styles.css">
+  <link rel="stylesheet" href="layout-styles.css" />
 </head>
 <body class="theme-light">
   <!-- Header -->
@@ -39,14 +39,17 @@
           Take a screenshot while the app is running. Clueless reads it with on-device OCR + AI, gives step-by-step explanations, and links sources.
         </p>
 
-        <form id="waitlist" class="waitlist" onsubmit="return submitWaitlist(event)">
+        <!-- Waitlist form (hero) -->
+        <form id="waitlist" class="waitlist">
           <label class="input-wrap">
             <span class="input-icon" aria-hidden>✉️</span>
-            <input type="email" id="email" placeholder="Enter your email to join the waitlist" aria-label="Email address">
+            <input type="email" id="email" placeholder="Enter your email to join the waitlist" aria-label="Email address" required>
           </label>
           <button type="submit" class="btn btn-primary">Join waitlist</button>
         </form>
-        <p id="formError" class="form-msg error" hidden>Please enter a valid email address.</p>
+
+        <!-- Shared messages -->
+        <p id="formError" class="form-msg error" hidden></p>
         <p id="formSuccess" class="form-msg success" hidden>Thanks! You're on the list — we'll be in touch.</p>
 
         <div class="chips">
@@ -138,8 +141,9 @@
         <h3 class="cta-title">Be first to try Clueless</h3>
         <p class="cta-text">Join the waitlist for early access, invites, and discounts.</p>
       </div>
-      <form onsubmit="return submitWaitlist(event)" class="cta-form">
-        <input type="email" id="email2" placeholder="you@school.edu" aria-label="Email address">
+      <!-- Waitlist form (CTA) -->
+      <form id="waitlist2" class="cta-form">
+        <input type="email" id="email2" placeholder="you@school.edu" aria-label="Email address" required>
         <button type="submit" class="btn btn-accent">Get early access</button>
       </form>
     </div>
@@ -185,87 +189,76 @@
     </div>
   </footer>
 
-  <script>
-    // year
+  <!-- Single unified script (year + Firebase waitlist) -->
+  <script type="module">
+    // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    function submitWaitlist(e){
-      if(e) e.preventDefault();
-      var inputs = [document.getElementById('email'), document.getElementById('email2')].filter(Boolean);
-      var email = inputs.map(i => i.value).find(v => v && v.length>0) || '';
-      var ok = /.+@.+\..+/.test(email);
-
-      var err = document.getElementById('formError');
-      var okEl = document.getElementById('formSuccess');
-
-      if(!ok){
-        if(err){ err.hidden = false; }
-        if(okEl){ okEl.hidden = true; }
-        return false;
-      }
-      if(err){ err.hidden = true; }
-      if(okEl){ okEl.hidden = false; }
-      inputs.forEach(i => i && (i.value=''));
-      return false;
-    }
-  </script>
-  <script type="module">
     // Firebase (CDN)
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getFirestore, collection, addDoc, serverTimestamp }
       from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // 1) YOUR Firebase config (Project Settings → Your apps → Web)
+    // TODO: Paste your real Firebase config here
     const firebaseConfig = {
-      apiKey:        "YOUR_API_KEY",
-      authDomain:    "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId:     "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId:         "YOUR_APP_ID"
+      apiKey: "AIzaSyDuZ5oUomc-4QiRzU9WV1CE_OYvHX2ch3o",
+      authDomain: "clueless-project-id.firebaseapp.com",
+      projectId: "clueless-project-id",
+      storageBucket: "clueless-project-id.firebasestorage.app",
+      messagingSenderId: "414737008695",
+      appId: "1:414737008695:web:0a8f54297d2298e61197b2"
     };
 
-    // Init
     const app = initializeApp(firebaseConfig);
     const db  = getFirestore(app);
 
-    // Helpers
-    const $ = (id) => document.getElementById(id);
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const errEl = document.getElementById('formError');
+    const okEl  = document.getElementById('formSuccess');
 
-    $("waitlist").addEventListener("submit", async (e) => {
+    function showError(msg) {
+      if (okEl) okEl.hidden = true;
+      if (errEl) { errEl.textContent = msg; errEl.hidden = false; }
+    }
+    function showSuccess() {
+      if (errEl) errEl.hidden = true;
+      if (okEl)  okEl.hidden  = false;
+    }
+
+    async function saveEmail(email) {
+      await addDoc(collection(db, "waitlist"), {
+        email,
+        createdAt: serverTimestamp(),
+        ua: navigator.userAgent || ""
+      });
+    }
+
+    async function handleSubmit(e, inputId) {
       e.preventDefault();
-      const email = $("email").value.trim();
-      $("formError").classList.add("hidden");
-      $("formSuccess").classList.add("hidden");
+      const input = document.getElementById(inputId);
+      const email = (input?.value || "").trim();
 
       if (!emailRe.test(email)) {
-        $("formError").textContent = "Please enter a valid email.";
-        $("formError").classList.remove("hidden");
+        showError("Please enter a valid email.");
         return;
       }
 
       try {
-        // OPTION A: Top-level collection
-        const colRef = collection(db, "waitlist");
-
-        await addDoc(colRef, {
-          email,
-          createdAt: serverTimestamp(),
-          ua: navigator.userAgent || ""
-        });
-
-        $("email").value = "";
-        $("formSuccess").classList.remove("hidden");
+        await saveEmail(email);
+        if (input) input.value = "";
+        showSuccess();
       } catch (err) {
         console.error(err);
-        $("formError").textContent = "Something went wrong. Please try again.";
-        $("formError").classList.remove("hidden");
+        showError("Something went wrong. Please try again.");
       }
-    });
+    }
+
+    // Wire up both forms
+    const form1 = document.getElementById('waitlist');
+    const form2 = document.getElementById('waitlist2');
+
+    if (form1) form1.addEventListener('submit', (e) => handleSubmit(e, 'email'));
+    if (form2) form2.addEventListener('submit', (e) => handleSubmit(e, 'email2'));
   </script>
-
-
-
 </body>
 </html>
